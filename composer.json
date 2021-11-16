@@ -3,6 +3,7 @@
     "slim/slim": "3.*",
     "ext-pdo": "*",
     "ext-json": "*",
-    "firebase/php-jwt": "^5.2"
+    "firebase/php-jwt": "^5.2",
+    "phpmailer/phpmailer": "^6.5"
   }
 }

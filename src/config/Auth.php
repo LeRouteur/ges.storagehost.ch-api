@@ -2,6 +2,9 @@
 
 namespace Users;
 
+require_once "JWT/JWTHandler.php";
+
+use Config\JWTHandler;
 use PDO;
 use PDOException;
 

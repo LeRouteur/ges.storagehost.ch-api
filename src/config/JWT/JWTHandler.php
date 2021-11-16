@@ -1,7 +1,6 @@
 <?php
 
-
-namespace Users;
+namespace Config;
 
 use DomainException;
 use Firebase\JWT\ExpiredException;

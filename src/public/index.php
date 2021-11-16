@@ -33,7 +33,13 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
 use Slim\Container;
+use Students\studentsDelete;
+use Students\studentsDisplay;
+use Students\studentsModify;
+use Students\studentsRegister;
 use Users\Auth;
+use Users\usersLogin;
+use Users\usersReset;
 
 $configuration = [
     'settings' => [
@@ -73,7 +79,7 @@ $app->post('/api/students', function (Request $request, Response $response) {
         $body = $request->getParsedBody();
 
         if (isset($body) && !empty($body)) {
-            $result = (new Order((array)$body, (array)$user_data, $this->pdo))->validateData();
+            $result = (new studentsRegister((array)$body, $this->pdo))->get_form_data();
             if (is_array($result)) {
                 return $response->withStatus(201)->withJson($result);
             } else {
@@ -105,7 +111,7 @@ $app->get('/api/students', function (Request $request, Response $response) {
     $auth = new Auth($this->pdo, $headers);
 
     if ($auth->isAuth()) {
-        return $response->withStatus(200)->withJson((new Info(0, $this->pdo))->listUsers());
+        return $response->withStatus(200)->withJson((new studentsDisplay($this->pdo))->display_students());
     } else {
         return $response->withStatus(401)->withJson(array(
             'status' => 'error',
@@ -116,12 +122,14 @@ $app->get('/api/students', function (Request $request, Response $response) {
 });
 
 // Display info of a specific student
-$app->get('/api/student', function (Request $request, Response $response) {
+$app->get('/api/student/{id}', function (Request $request, Response $response, $args) {
     $headers = getallheaders();
     $auth = new Auth($this->pdo, $headers);
 
     if ($auth->isAuth()) {
-        return $response->withStatus(200)->withJson((new Info($auth->isAuth()['data']['id'], $this->pdo))->listUserInfo());
+        $id = $args['id'];
+        echo $id;
+        return $response->withStatus(200)->withJson((new studentsDisplay($this->pdo))->display_student($id));
     } else {
         return $response->withStatus(401)->withJson(array(
             'status' => 'error',
@@ -132,28 +140,62 @@ $app->get('/api/student', function (Request $request, Response $response) {
 });
 
 // Modify info of a specific student
-$app->put('/api/student', function (Request $request, Response $response) {
-    $headers = getallheaders();
-    $auth = new Auth($this->pdo, $headers);
+$app->put('/api/student/{id}', function (Request $request, Response $response, $args) {
+    if ($request->getHeader('Content-Type')[0] == 'application/json') {
+        $headers = getallheaders();
+        $auth = new Auth($this->pdo, $headers);
+        $body = $request->getParsedBody();
 
-    if ($auth->isAuth()) {
-        return $response->withStatus(200)->withJson((new Info($auth->isAuth()['data']['id'], $this->pdo))->listUserInfo());
+        if ($auth->isAuth()) {
+            if (isset($args['id'])) {
+                $id = $args['id'];
+                if (!empty($body)) {
+                    return $response->withStatus(200)->withJson((new studentsModify($body, $id, $this->pdo))->modify_student());
+                } else {
+                    return $response->withStatus(400)->withJson(array(
+                        'status' => 'error',
+                        'message' => 'missing_body',
+                        'date' => time()
+                    ));
+                }
+            } else {
+                return $response->withStatus(400)->withJson(array(
+                    'status' => 'error',
+                    'message' => 'missing_required_parameter_id',
+                    'date' => time()
+                ));
+            }
+        } else {
+            return $response->withStatus(401)->withJson(array(
+                'status' => 'error',
+                'message' => 'unauthorized',
+                'date' => time()
+            ));
+        }
     } else {
-        return $response->withStatus(401)->withJson(array(
+        return $response->withStatus(400)->withJson(array(
             'status' => 'error',
-            'message' => 'unauthorized',
+            'message' => 'missing_required_header_content_type',
             'date' => time()
         ));
     }
 });
 
 // Delete a student
-$app->delete('/api/student/delete', function (Request $request, Response $response, $args) {
+$app->delete('/api/student/delete/{id}', function (Request $request, Response $response, $args) {
     $headers = getallheaders();
     $auth = new Auth($this->pdo, $headers);
 
     if ($auth->isAuth()) {
-        $result = (new Users\Delete($this->pdo, $auth->isAuth()['data']['id']))->deleteUser();
+        if (isset($args['id'])) {
+            $result = (new studentsDelete($args['id'], $this->pdo))->delete_student();
+        } else {
+            return $response->withStatus(400)->withJson(array(
+                'status' => 'error',
+                'message' => 'missing_required_parameter_id',
+                'date' => time()
+            ));
+        }
 
         if (strpos($result, "Integrity constraint violation")) {
             return $response->withStatus(400)->withJson(array(
@@ -247,7 +289,8 @@ $app->post('/api/users/login', function (Request $request, Response $response) {
     $body = $request->getParsedBody();
 
     if (isset($body) && !empty($body)) {
-        $result = (new Login((array)$body, $this->pdo))->getFormData();
+        $result = (new usersLogin((array)$body, $this->pdo))->get_form_data();
+
         if (is_array($result) && in_array('success', $result)) {
             return $response->withStatus(200)->withJson($result);
         } else {
@@ -265,9 +308,8 @@ $app->post('/api/users/login', function (Request $request, Response $response) {
 // Register a new user
 $app->post('/api/users', function (Request $request, Response $response) {
     $body = $request->getParsedBody();
-
     if (isset($body) && !empty($body)) {
-        $result = (new Register((array)$body, $this->pdo))->getFormData();
+        $result = (new Users\usersRegister((array)$body, $this->pdo))->get_form_data();
         if (is_array($result)) {
             return $response->withStatus(201)->withJson($result);
         } else {
@@ -291,7 +333,7 @@ $app->post('/api/users/password', function (Request $request, Response $response
     $body = $request->getParsedBody();
 
     if (isset($body) && isset($body['email']) && !empty($body)) {
-        $result = (new Password($this->pdo, "", $body['email'], ""))->sendEmail();
+        $result = (new usersReset($this->pdo, "", $body['email'], "", ""))->send_email();
 
         if ($result) {
             return $response->withStatus(204);
@@ -316,16 +358,18 @@ $app->post('/api/users/password', function (Request $request, Response $response
 $app->post('/api/users/password/reset', function (Request $request, Response $response) {
     $body = $request->getParsedBody();
 
-    if (isset($body) && isset($body['email']) && isset($body['token']) && isset($body['password']) && !empty($body)) {
-        $result = (new Password($this->pdo, $body['token'], $body['email'], $body['password']))->updateUser();
+    if (isset($body) && isset($body['email']) && isset($body['token']) && isset($body['password']) && isset($body['password_conf']) && !empty($body)) {
+        $result = (new usersReset($this->pdo, $body['token'], $body['email'], $body['password'], $body['password_conf']))->update_user();
 
-        if ($result) {
+        var_dump($result);
+
+        if ($result == "ok") {
             return $response->withStatus(204);
         } else {
             return $response->withStatus(400)->withJson(
                 array(
                     'status' => 'error',
-                    'message' => "bad_request",
+                    'message' => $result,
                     'date' => time()
                 ));
         }
