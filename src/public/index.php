@@ -1,0 +1,349 @@
+<?php
+
+require __DIR__ . "/../../vendor/autoload.php";
+require __DIR__ . "/../config/SQLConnection.php";
+
+/**
+ * Users
+ */
+require __DIR__ . "/../routes/users/register/usersRegister.php";
+require __DIR__ . "/../routes/users/login/usersLogin.php";
+require __DIR__ . "/../routes/users/reset/usersReset.php";
+//require __DIR__ . "/../routes/users/password/Password.php";
+
+/**
+ * Students
+ */
+require __DIR__ . "/../routes/students/register/studentsRegister.php";
+require __DIR__ . "/../routes/students/display/studentsDisplay.php";
+require __DIR__ . "/../routes/students/modify/studentsModify.php";
+require __DIR__ . "/../routes/students/delete/studentsDelete.php";
+
+/**
+ * Invoices
+ */
+require __DIR__ . "/../routes/invoices/create/invoicesCreate.php";
+
+/**
+ * Auth
+ */
+require __DIR__ . "/../config/Auth.php";
+
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\App;
+use Slim\Container;
+use Users\Auth;
+
+$configuration = [
+    'settings' => [
+        'displayErrorDetails' => true,
+    ],
+];
+
+$c = new Container($configuration);
+
+$app = new App($c);
+
+$container = $app->getContainer();
+
+$container['pdo'] = function () {
+    return (new SQLConnection())->connect();
+};
+
+/**
+ * ---------------------------------------------------------------------------------------------------------------------
+ * AUTHENTICATED ACTIONS
+ * ---------------------------------------------------------------------------------------------------------------------
+ */
+
+/**
+ * -----------------------------------------------------------------------
+ * STUDENTS SECTION
+ * -----------------------------------------------------------------------
+ */
+
+// Register a student
+$app->post('/api/students', function (Request $request, Response $response) {
+    $headers = getallheaders();
+    $auth = new Auth($this->pdo, $headers);
+
+    if ($auth->isAuth()) {
+        $user_data = $auth->isAuth();
+        $body = $request->getParsedBody();
+
+        if (isset($body) && !empty($body)) {
+            $result = (new Order((array)$body, (array)$user_data, $this->pdo))->validateData();
+            if (is_array($result)) {
+                return $response->withStatus(201)->withJson($result);
+            } else {
+                return $response->withStatus(400)->withJson(array(
+                    'status' => 'error',
+                    'message' => $result,
+                    'date' => time()
+                ));
+            }
+        } else {
+            return $response->withStatus(400)->withJson(array(
+                'status' => 'error',
+                'message' => 'missing_body',
+                'date' => time()
+            ));
+        }
+    } else {
+        return $response->withStatus(401)->withJson(array(
+            'status' => 'error',
+            'message' => 'unauthorized',
+            'date' => time()
+        ));
+    }
+});
+
+// Display all students
+$app->get('/api/students', function (Request $request, Response $response) {
+    $headers = getallheaders();
+    $auth = new Auth($this->pdo, $headers);
+
+    if ($auth->isAuth()) {
+        return $response->withStatus(200)->withJson((new Info(0, $this->pdo))->listUsers());
+    } else {
+        return $response->withStatus(401)->withJson(array(
+            'status' => 'error',
+            'message' => 'unauthorized',
+            'date' => time()
+        ));
+    }
+});
+
+// Display info of a specific student
+$app->get('/api/student', function (Request $request, Response $response) {
+    $headers = getallheaders();
+    $auth = new Auth($this->pdo, $headers);
+
+    if ($auth->isAuth()) {
+        return $response->withStatus(200)->withJson((new Info($auth->isAuth()['data']['id'], $this->pdo))->listUserInfo());
+    } else {
+        return $response->withStatus(401)->withJson(array(
+            'status' => 'error',
+            'message' => 'unauthorized',
+            'date' => time()
+        ));
+    }
+});
+
+// Modify info of a specific student
+$app->put('/api/student', function (Request $request, Response $response) {
+    $headers = getallheaders();
+    $auth = new Auth($this->pdo, $headers);
+
+    if ($auth->isAuth()) {
+        return $response->withStatus(200)->withJson((new Info($auth->isAuth()['data']['id'], $this->pdo))->listUserInfo());
+    } else {
+        return $response->withStatus(401)->withJson(array(
+            'status' => 'error',
+            'message' => 'unauthorized',
+            'date' => time()
+        ));
+    }
+});
+
+// Delete a student
+$app->delete('/api/student/delete', function (Request $request, Response $response, $args) {
+    $headers = getallheaders();
+    $auth = new Auth($this->pdo, $headers);
+
+    if ($auth->isAuth()) {
+        $result = (new Users\Delete($this->pdo, $auth->isAuth()['data']['id']))->deleteUser();
+
+        if (strpos($result, "Integrity constraint violation")) {
+            return $response->withStatus(400)->withJson(array(
+                'status' => 'error',
+                'message' => 'user_has_orders',
+                'date' => time()
+            ));
+        } elseif ($result['status'] == 'success') {
+            return $response->withStatus(200)->withJson($result);
+
+        } else {
+            return $response->withStatus(404)->withJson($result);
+        }
+    } else {
+        return $response->withStatus(401)->withJson(array(
+            'status' => 'error',
+            'message' => 'unauthorized',
+            'date' => time()
+        ));
+    }
+});
+
+/**
+ * -----------------------------------------------------------------------
+ * INVOICES SECTION
+ * -----------------------------------------------------------------------
+ */
+
+// Create an invoice
+$app->post('/api/invoices', function (Request $request, Response $response) {
+    $headers = getallheaders();
+    $auth = new Auth($this->pdo, $headers);
+
+    if ($auth->isAuth()) {
+        $user_data = $auth->isAuth();
+        $vms = (new Order(array(), $user_data, $this->pdo))->getOrders();
+        return $response->withStatus(200)->withJson($vms);
+    } else {
+        return $response->withStatus(401)->withJson(array(
+            'status' => 'error',
+            'message' => 'unauthorized',
+            'date' => time()
+        ));
+    }
+});
+
+// Get an invoice by its ID
+$app->get('/api/invoices', function (Request $request, Response $response) {
+    $headers = getallheaders();
+    $auth = new Auth($this->pdo, $headers);
+
+    if ($auth->isAuth()) {
+        $user_data = $auth->isAuth();
+        $body = $request->getParsedBody();
+
+        if (isset($body) && !empty($body)) {
+            $result = (new Order((array)$body, (array)$user_data, $this->pdo))->validateData();
+            if (is_array($result)) {
+                return $response->withStatus(201)->withJson($result);
+            } else {
+                return $response->withStatus(400)->withJson(array(
+                    'status' => 'error',
+                    'message' => $result,
+                    'date' => time()
+                ));
+            }
+        } else {
+            return $response->withStatus(400)->withJson(array(
+                'status' => 'error',
+                'message' => 'missing_body',
+                'date' => time()
+            ));
+        }
+    } else {
+        return $response->withStatus(401)->withJson(array(
+            'status' => 'error',
+            'message' => 'unauthorized',
+            'date' => time()
+        ));
+    }
+});
+
+/**
+ * -----------------------------------------------------------------------
+ * USERS SECTION
+ * -----------------------------------------------------------------------
+ */
+
+// Login the user
+$app->post('/api/users/login', function (Request $request, Response $response) {
+    $body = $request->getParsedBody();
+
+    if (isset($body) && !empty($body)) {
+        $result = (new Login((array)$body, $this->pdo))->getFormData();
+        if (is_array($result) && in_array('success', $result)) {
+            return $response->withStatus(200)->withJson($result);
+        } else {
+            return $response->withStatus(400)->withJson($result);
+        }
+    } else {
+        return $response->withStatus(400)->withJson(array(
+            'status' => 'error',
+            'message' => 'missing_body',
+            'date' => time()
+        ));
+    }
+});
+
+// Register a new user
+$app->post('/api/users', function (Request $request, Response $response) {
+    $body = $request->getParsedBody();
+
+    if (isset($body) && !empty($body)) {
+        $result = (new Register((array)$body, $this->pdo))->getFormData();
+        if (is_array($result)) {
+            return $response->withStatus(201)->withJson($result);
+        } else {
+            return $response->withStatus(400)->withJson(array(
+                'status' => 'error',
+                'message' => $result,
+                'date' => time()
+            ));
+        }
+    } else {
+        return $response->withStatus(400)->withJson(array(
+            'status' => 'error',
+            'message' => 'missing_body',
+            'date' => time()
+        ));
+    }
+});
+
+// Send email to user
+$app->post('/api/users/password', function (Request $request, Response $response) {
+    $body = $request->getParsedBody();
+
+    if (isset($body) && isset($body['email']) && !empty($body)) {
+        $result = (new Password($this->pdo, "", $body['email'], ""))->sendEmail();
+
+        if ($result) {
+            return $response->withStatus(204);
+        } else {
+            return $response->withStatus(400)->withJson(
+                array(
+                    'status' => 'error',
+                    'message' => "bad_request",
+                    'date' => time()
+                ));
+        }
+    } else {
+        return $response->withStatus(400)->withJson(array(
+            'status' => 'error',
+            'message' => 'missing_body',
+            'date' => time()
+        ));
+    }
+});
+
+// Update user password
+$app->post('/api/users/password/reset', function (Request $request, Response $response) {
+    $body = $request->getParsedBody();
+
+    if (isset($body) && isset($body['email']) && isset($body['token']) && isset($body['password']) && !empty($body)) {
+        $result = (new Password($this->pdo, $body['token'], $body['email'], $body['password']))->updateUser();
+
+        if ($result) {
+            return $response->withStatus(204);
+        } else {
+            return $response->withStatus(400)->withJson(
+                array(
+                    'status' => 'error',
+                    'message' => "bad_request",
+                    'date' => time()
+                ));
+        }
+    } else {
+        return $response->withStatus(400)->withJson(array(
+            'status' => 'error',
+            'message' => 'missing_body',
+            'date' => time()
+        ));
+    }
+});
+
+/**
+ * ---------------------------------------------------------------------------------------------------------------------
+ */
+
+try {
+    $app->run();
+} catch (Throwable $e) {
+    echo "Cannot run the app! " . $e->getMessage();
+}
