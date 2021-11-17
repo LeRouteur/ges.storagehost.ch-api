@@ -75,7 +75,6 @@ $app->post('/api/students', function (Request $request, Response $response) {
     $auth = new Auth($this->pdo, $headers);
 
     if ($auth->isAuth()) {
-        $user_data = $auth->isAuth();
         $body = $request->getParsedBody();
 
         if (isset($body) && !empty($body)) {
@@ -148,9 +147,16 @@ $app->put('/api/student/{id}', function (Request $request, Response $response, $
 
         if ($auth->isAuth()) {
             if (isset($args['id'])) {
-                $id = $args['id'];
                 if (!empty($body)) {
-                    return $response->withStatus(200)->withJson((new studentsModify($body, $id, $this->pdo))->modify_student());
+                    $result = (new studentsModify($body, $args['id'], $this->pdo))->modify_student();
+                    if (is_array($result)) {
+                        return $response->withStatus(200)->withJson($result);
+                    } else {
+                        return $response->withStatus(400)->withJson(array(
+                            'status' => 'error',
+                            'message' => $result,
+                            'date' => time()));
+                    }
                 } else {
                     return $response->withStatus(400)->withJson(array(
                         'status' => 'error',
@@ -182,32 +188,30 @@ $app->put('/api/student/{id}', function (Request $request, Response $response, $
 });
 
 // Delete a student
-$app->delete('/api/student/delete/{id}', function (Request $request, Response $response, $args) {
+$app->delete('/api/student/{id}', function (Request $request, Response $response, $args) {
     $headers = getallheaders();
     $auth = new Auth($this->pdo, $headers);
 
     if ($auth->isAuth()) {
         if (isset($args['id'])) {
             $result = (new studentsDelete($args['id'], $this->pdo))->delete_student();
+            if (is_array($result)) {
+                return $result;
+            } elseif ($result) {
+                return $response->withStatus(204);
+            } else {
+                return $response->withStatus(404)->withJson(array(
+                    'status' => 'error',
+                    'message' => 'student_does_not_exist',
+                    'date' => time()
+                ));
+            }
         } else {
             return $response->withStatus(400)->withJson(array(
                 'status' => 'error',
                 'message' => 'missing_required_parameter_id',
                 'date' => time()
             ));
-        }
-
-        if (strpos($result, "Integrity constraint violation")) {
-            return $response->withStatus(400)->withJson(array(
-                'status' => 'error',
-                'message' => 'user_has_orders',
-                'date' => time()
-            ));
-        } elseif ($result['status'] == 'success') {
-            return $response->withStatus(200)->withJson($result);
-
-        } else {
-            return $response->withStatus(404)->withJson($result);
         }
     } else {
         return $response->withStatus(401)->withJson(array(
