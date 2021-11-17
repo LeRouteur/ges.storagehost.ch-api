@@ -61,7 +61,7 @@ class Validation
     {
         $category = strtoupper($category);
 
-        if ($category == "A1" || $category == "A35" || $category == "A" || $category == "B" || $category == "C1" || $category == "D1" || $category == "C" || $category == "D" || $category == "BE" || $category == "CE" || $category == "OACP" || $category == "TPP121") {
+        if ($category == "C1/D1" || $category == "A/A1/A35" || $category == "B" || $category == "C" || $category == "D" || $category == "BE" || $category == "CE" || $category == "OACP" || $category == "TPP121/122") {
             return $category;
         } else {
             return false;

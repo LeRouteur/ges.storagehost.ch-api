@@ -9,6 +9,8 @@ class invoicesCreate
 
     }
 
+    //TODO: ajouter prix du livre variable (par défaut 80 CHF)
+
     public function calculate_casco()
     {
         // B : 80 CHF
@@ -31,6 +33,16 @@ class invoicesCreate
         // C : 350 CHF
         // D : 500 CHF
         // CE : 350 CHF
+    }
+
+    public function calculate_oacp()
+    {
+        // OACP : 2500 CHF
+    }
+
+    public function calculate_theorical_lesson()
+    {
+        // 70 CHF (modifiable)
     }
 
     public function calculate_final_price()
