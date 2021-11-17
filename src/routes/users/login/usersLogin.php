@@ -2,7 +2,7 @@
 
 namespace Users;
 
-include __DIR__."/model/usersLoginModel.php";
+require __DIR__."/model/usersLoginModel.php";
 
 /** This file contains the required methods to receive and validate the form data for registering a user.
  * @author Cyril Buchs
@@ -38,9 +38,6 @@ class usersLogin
     {
 
         if (!empty($this->form_data) && !empty($this->form_data['email']) && !empty($this->form_data['password'])) {
-            $this->form_data = [$this->form_data['email'], $this->form_data['password']];
-            //var_dump($this->form_data);
-
             return ($this->validate_data());
 
         } else {
@@ -59,11 +56,11 @@ class usersLogin
     private function validate_data(): array
     {
         // Validate email
-        if (filter_var($this->form_data[0], FILTER_VALIDATE_EMAIL, FILTER_SANITIZE_EMAIL)) {
-            $this->valid_form_data['email'] = $this->form_data[0];
+        if (filter_var($this->form_data['email'], FILTER_VALIDATE_EMAIL, FILTER_SANITIZE_EMAIL)) {
+            $this->valid_form_data['email'] = $this->form_data['email'];
 
             // Add password
-            $this->valid_form_data['password'] = $this->form_data[1];
+            $this->valid_form_data['password'] = $this->form_data['password'];
 
             return (new usersLoginModel($this->valid_form_data, $this->pdo))->authenticate_user();
         } else {
