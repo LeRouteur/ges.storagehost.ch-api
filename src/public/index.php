@@ -25,10 +25,18 @@ require __DIR__ . "/../routes/students/delete/studentsDelete.php";
 require __DIR__ . "/../routes/invoices/create/invoicesCreate.php";
 
 /**
+ * Prices
+ */
+require __DIR__ . "/../routes/prices/display/pricesDisplay.php";
+require __DIR__ . "/../routes/prices/modify/pricesModify.php";
+
+/**
  * Auth
  */
 require __DIR__ . "/../config/Auth.php";
 
+use Prices\pricesDisplay;
+use Prices\pricesModify;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
@@ -62,6 +70,65 @@ $container['pdo'] = function () {
  * AUTHENTICATED ACTIONS
  * ---------------------------------------------------------------------------------------------------------------------
  */
+
+/**
+ * -----------------------------------------------------------------------
+ * PRICES SECTION
+ * -----------------------------------------------------------------------
+ */
+// Get the prices
+$app->get('/api/prices', function (Request $request, Response $response) {
+    $headers = getallheaders();
+    $auth = new Auth($this->pdo, $headers);
+
+    if ($auth->isAuth()) {
+        return $response->withStatus(200)->withJson((new pricesDisplay($this->pdo))->get_prices());
+    } else {
+        return $response->withStatus(401)->withJson(array(
+            'status' => 'error',
+            'message' => 'unauthorized',
+            'date' => time()
+        ));
+    }
+});
+
+// Update prices
+$app->put('/api/prices', function (Request $request, Response $response) {
+    if ($request->getHeader('Content-Type')[0] == 'application/json') {
+        $headers = getallheaders();
+        $auth = new Auth($this->pdo, $headers);
+        $body = $request->getParsedBody();
+
+        if ($auth->isAuth()) {
+            if (!empty($body)) {
+                $result = (new pricesModify($this->pdo, $body))->update_prices();
+                if ($result['status'] == 'success') {
+                    return $response->withStatus(200)->withJson($result);
+                } else {
+                    return $response->withStatus(400)->withJson($result);
+                }
+            } else {
+                return $response->withStatus(400)->withJson(array(
+                    'status' => 'error',
+                    'message' => 'missing_body',
+                    'date' => time()
+                ));
+            }
+        } else {
+            return $response->withStatus(401)->withJson(array(
+                'status' => 'error',
+                'message' => 'unauthorized',
+                'date' => time()
+            ));
+        }
+    } else {
+        return $response->withStatus(400)->withJson(array(
+            'status' => 'error',
+            'message' => 'missing_required_header_content_type',
+            'date' => time()
+        ));
+    }
+});
 
 /**
  * -----------------------------------------------------------------------
