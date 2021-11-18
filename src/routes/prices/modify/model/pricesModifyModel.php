@@ -16,7 +16,6 @@ class pricesModifyModel
 
     public function update_prices(array $data)
     {
-        var_dump($data);
         try {
             $req = $this->pdo->prepare('UPDATE ges_storagehost_ch.prices SET casco = :casco, lesson = :lesson, 
                                      exam = :exam, oacp = :oacp, 
