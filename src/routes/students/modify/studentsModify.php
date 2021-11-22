@@ -143,25 +143,19 @@ class studentsModify
         $exam_dates = $this->form_data['exam_dates'][0];
         $first_exam = $second_exam = $third_exam = "";
 
-        if (!empty($exam_dates['1st'])) {
-            $first_exam = date("Y-m-d", strtotime($exam_dates['1st']));
+        if (!empty($exam_dates[0])) {
+            $first_exam = date("Y-m-d", strtotime($exam_dates[0]));
             $this->valid_form_data['1st_exam'] = $first_exam;
-        } else {
-            $this->valid_form_data['1st_exam'] = "0000-00-00";
         }
 
-        if (!empty($exam_dates['2nd'])) {
-            $second_exam = date("Y-m-d", strtotime($exam_dates['2nd']));
+        if (!empty($exam_dates[1])) {
+            $second_exam = date("Y-m-d", strtotime($exam_dates[1]));
             $this->valid_form_data['2nd_exam'] = $second_exam;
-        } else {
-            $this->valid_form_data['2nd_exam'] = "0000-00-00";
         }
 
-        if (!empty($exam_dates['3rd'])) {
-            $third_exam = date("Y-m-d", strtotime($exam_dates['3rd']));
+        if (!empty($exam_dates[2])) {
+            $third_exam = date("Y-m-d", strtotime($exam_dates[2]));
             $this->valid_form_data['3rd_exam'] = $third_exam;
-        } else {
-            $this->valid_form_data['3rd_exam'] = "0000-00-00";
         }
     }
 }
