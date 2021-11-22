@@ -102,6 +102,9 @@ class Validation
 
     public function validate_city(string $city): array|string|null
     {
+        $city = strtolower($city);
+        $city = ucwords($city);
+
         if (filter_var($city, FILTER_SANITIZE_STRING)) {
             return preg_replace('/\d+/u', '', $city);
         } else {
