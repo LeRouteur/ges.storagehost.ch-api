@@ -194,7 +194,6 @@ $app->get('/api/student/{id}', function (Request $request, Response $response, $
 
     if ($auth->isAuth()) {
         $id = $args['id'];
-        echo $id;
         return $response->withStatus(200)->withJson((new studentsDisplay($this->pdo))->display_student($id));
     } else {
         return $response->withStatus(401)->withJson(array(

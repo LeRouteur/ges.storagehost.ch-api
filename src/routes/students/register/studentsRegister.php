@@ -100,7 +100,7 @@ class studentsRegister
             return "bad_first_name";
         }
 
-        if (isset($this->form_data['email'])) {
+        if (isset($this->form_data['email']) && $this->form_data['email'] !== null && $this->form_data['email'] !== "") {
             $email = $validation->validate_email($this->form_data['email']);
             if ($email) {
                 $this->valid_form_data['email'] = $email;
