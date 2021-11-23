@@ -24,7 +24,7 @@ class studentsRegisterModel
     {
         $sln = $this->form_data['student_license_number'];
         try {
-            $req = $this->pdo->prepare('SELECT student_license_number FROM ges_storagehost_ch.students WHERE student_license_number = :sln');
+            $req = $this->pdo->prepare('SELECT student_license_number, phone FROM ges_storagehost_ch.students WHERE student_license_number = :sln');
             $req->bindParam(':sln', $sln);
             $req->execute();
 

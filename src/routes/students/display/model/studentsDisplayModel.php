@@ -52,7 +52,6 @@ class studentsDisplayModel
             $req = $this->pdo->prepare('SELECT id, student_license_number, validity, last_name, first_name, email, address, postal_code, city, date_of_birth, job, phone, category, categories_holder, `1st_date`, `2nd_date`, `3rd_date` FROM ges_storagehost_ch.students INNER JOIN exam_dates ed on students.id = ed.student_id WHERE ges_storagehost_ch.students.id = :id');
             $req->bindParam(':id', $id) && $req->execute();
             $student = $req->fetch();
-            var_dump($student);
 
             if (!empty($student)) {
                 return array(
