@@ -119,4 +119,70 @@ class studentsModifyModel
             );
         }
     }
+
+    // update already existing student lessons
+    public function modify_student_lessons_by_id(): array
+    {
+        try {
+            foreach ($this->data as $datum) {
+                $req = $this->pdo->prepare('UPDATE lesson_details SET date = :date, details = :details WHERE lesson_id = :lesson_id');
+                $req->execute(array(
+                    ':date' => $datum['date'],
+                    ':details' => $datum['lesson_detail'],
+                    ':lesson_id' => $datum['lesson_id']
+                ));
+            }
+            return array(
+                'status' => 'success',
+                'data' => $this->data,
+                'date' => time()
+            );
+        } catch (PDOException $e) {
+            return array(
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'date' => time()
+            );
+        }
+    }
+
+    // add lesson to student
+    public function add_student_lessons(): array
+    {
+        $student_id = $this->data['student_id'];
+        array_splice($this->data, 0, 1);
+        try {
+            $data = array();
+
+            foreach ($this->data as $datum) {
+                $req = $this->pdo->prepare('INSERT INTO ges_storagehost_ch.lesson_details(student_id, date, details) VALUES (:student_id, :date, :details)');
+                $req->execute(array(
+                    ':date' => $datum['date'],
+                    ':details' => $datum['lesson_detail'],
+                    ':student_id' => $student_id
+                ));
+
+                $array = array(
+                    'lesson_id' => $this->pdo->lastInsertId(),
+                    'student_id' => $student_id,
+                    'date' => $datum['date'],
+                    'lesson_detail' => $datum['lesson_detail']
+                );
+
+                array_push($data, $array);
+            }
+
+            return array(
+                'status' => 'success',
+                'data' => $data,
+                'date' => time()
+            );
+        } catch (PDOException $e) {
+            return array(
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'date' => time()
+            );
+        }
+    }
 }

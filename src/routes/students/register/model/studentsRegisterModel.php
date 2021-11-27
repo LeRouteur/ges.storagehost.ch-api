@@ -22,13 +22,36 @@ class studentsRegisterModel
      */
     public function check_sln_existence(): ?bool
     {
-        $sln = $this->form_data['student_license_number'];
         try {
-            $req = $this->pdo->prepare('SELECT student_license_number, phone FROM ges_storagehost_ch.students WHERE student_license_number = :sln');
-            $req->bindParam(':sln', $sln);
+            $req = $this->pdo->prepare('SELECT student_license_number FROM ges_storagehost_ch.students WHERE student_license_number = :sln');
+            $req->bindParam(':sln', $this->form_data['student_license_number']);
             $req->execute();
 
             // Check if request rows are higher than 0. If yes, it means that the sln exists
+            if ($req->rowCount() > 0) {
+                return false;
+            } else {
+                // Email does not exist, so account creating is OK
+                if ($this->check_phone_existence()) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        } catch (PDOException $e) {
+            echo $e->getMessage();
+        }
+        return null;
+    }
+
+    private function check_phone_existence()
+    {
+        try {
+            $req = $this->pdo->prepare('SELECT phone FROM ges_storagehost_ch.students WHERE phone = :phone');
+            $req->bindParam(':phone', $this->form_data['phone']);
+            $req->execute();
+
+            // Check if request rows are higher than 0. If yes, it means that the phone exists
             if ($req->rowCount() > 0) {
                 return false;
             } else {
