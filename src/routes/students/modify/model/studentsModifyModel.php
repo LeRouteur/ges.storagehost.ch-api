@@ -119,4 +119,79 @@ class studentsModifyModel
             );
         }
     }
+
+    // update already existing student lessons
+    public function modify_student_lessons_by_id(): array
+    {
+        try {
+            foreach ($this->data as $datum) {
+                $req = $this->pdo->prepare('UPDATE lesson_details SET date = :date, duration = :duration, student_comment = :student_comment, teacher_comment = :teacher_comment WHERE lesson_id = :lesson_id');
+                $req->execute(array(
+                    ':date' => $datum['date'],
+                    ':duration' => $datum['lesson_duration'],
+                    ':student_comment' => $datum['student_comment'],
+                    ':teacher_comment' => $datum['teacher_comment'],
+                    ':lesson_id' => $datum['lesson_id']
+                ));
+            }
+            return array(
+                'status' => 'success',
+                'data' => $this->data,
+                'date' => time()
+            );
+        } catch (PDOException $e) {
+            return array(
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'date' => time()
+            );
+        }
+    }
+
+    // add lesson to student
+    public function add_student_lessons(): array
+    {
+        $student_id = $this->data['student_id'];
+
+        // remove student_id from the array
+        array_splice($this->data, 0, 1);
+
+        try {
+            $data = array();
+
+            foreach ($this->data as $datum) {
+                $req = $this->pdo->prepare('INSERT INTO ges_storagehost_ch.lesson_details(student_id, date, duration, student_comment, teacher_comment) VALUES (:student_id, :date, :duration, :student_comment, :teacher_comment)');
+                $req->execute(array(
+                    ':date' => $datum['date'],
+                    ':duration' => $datum['lesson_duration'],
+                    ':student_comment' => $datum['student_comment'],
+                    ':teacher_comment' => $datum['teacher_comment'],
+                    ':student_id' => $student_id
+                ));
+
+                $array = array(
+                    'lesson_id' => $this->pdo->lastInsertId(),
+                    'student_id' => $student_id,
+                    'date' => $datum['date'],
+                    'duration' => $datum['lesson_duration'],
+                    'student_comment' => $datum['student_comment'],
+                    'teacher_comment' => $datum['teacher_comment']
+                );
+
+                array_push($data, $array);
+            }
+
+            return array(
+                'status' => 'success',
+                'data' => $data,
+                'date' => time()
+            );
+        } catch (PDOException $e) {
+            return array(
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'date' => time()
+            );
+        }
+    }
 }

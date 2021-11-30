@@ -24,4 +24,9 @@ class studentsDisplay
     {
         return (new studentsDisplayModel($this->pdo))->get_student_by_id($id);
     }
+
+    public function display_student_lessons(int $id)
+    {
+        return (new studentsDisplayModel($this->pdo))->get_student_lessons_by_id($id);
+    }
 }

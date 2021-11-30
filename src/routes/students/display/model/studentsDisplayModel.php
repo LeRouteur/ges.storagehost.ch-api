@@ -75,4 +75,34 @@ class studentsDisplayModel
             );
         }
     }
+
+    public function get_student_lessons_by_id(int $id)
+    {
+        try {
+            $req = $this->pdo->prepare('SELECT * FROM ges_storagehost_ch.lesson_details WHERE ges_storagehost_ch.lesson_details.student_id = :id');
+            $req->bindParam(':id', $id) && $req->execute();
+            $student = $req->fetchAll();
+
+            if (!empty($student)) {
+                return array(
+                    'status' => 'success',
+                    'data' => $student,
+                    'date' => time()
+                );
+            } else {
+                return array(
+                    'status' => 'success',
+                    'message' => 'no_lessons',
+                    'date' => time()
+                );
+            }
+
+        } catch (PDOException $exception) {
+            return array(
+                'status' => 'error',
+                'message' => $exception->getMessage(),
+                'date' => time()
+            );
+        }
+    }
 }
