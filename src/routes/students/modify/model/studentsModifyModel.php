@@ -125,10 +125,12 @@ class studentsModifyModel
     {
         try {
             foreach ($this->data as $datum) {
-                $req = $this->pdo->prepare('UPDATE lesson_details SET date = :date, details = :details WHERE lesson_id = :lesson_id');
+                $req = $this->pdo->prepare('UPDATE lesson_details SET date = :date, duration = :duration, student_comment = :student_comment, teacher_comment = :teacher_comment WHERE lesson_id = :lesson_id');
                 $req->execute(array(
                     ':date' => $datum['date'],
-                    ':details' => $datum['lesson_detail'],
+                    ':duration' => $datum['lesson_duration'],
+                    ':student_comment' => $datum['student_comment'],
+                    ':teacher_comment' => $datum['teacher_comment'],
                     ':lesson_id' => $datum['lesson_id']
                 ));
             }
@@ -150,15 +152,20 @@ class studentsModifyModel
     public function add_student_lessons(): array
     {
         $student_id = $this->data['student_id'];
+
+        // remove student_id from the array
         array_splice($this->data, 0, 1);
+
         try {
             $data = array();
 
             foreach ($this->data as $datum) {
-                $req = $this->pdo->prepare('INSERT INTO ges_storagehost_ch.lesson_details(student_id, date, details) VALUES (:student_id, :date, :details)');
+                $req = $this->pdo->prepare('INSERT INTO ges_storagehost_ch.lesson_details(student_id, date, duration, student_comment, teacher_comment) VALUES (:student_id, :date, :duration, :student_comment, :teacher_comment)');
                 $req->execute(array(
                     ':date' => $datum['date'],
-                    ':details' => $datum['lesson_detail'],
+                    ':duration' => $datum['lesson_duration'],
+                    ':student_comment' => $datum['student_comment'],
+                    ':teacher_comment' => $datum['teacher_comment'],
                     ':student_id' => $student_id
                 ));
 
@@ -166,7 +173,9 @@ class studentsModifyModel
                     'lesson_id' => $this->pdo->lastInsertId(),
                     'student_id' => $student_id,
                     'date' => $datum['date'],
-                    'lesson_detail' => $datum['lesson_detail']
+                    'duration' => $datum['lesson_duration'],
+                    'student_comment' => $datum['student_comment'],
+                    'teacher_comment' => $datum['teacher_comment']
                 );
 
                 array_push($data, $array);

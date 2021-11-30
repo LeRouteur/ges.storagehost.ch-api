@@ -3,7 +3,7 @@
 /*
  * Global settings
  */
-define("SITE_URL", "http://localhost");
+define("SITE_URL", "http://dev.ges.ui.ch/");
 
 /*
  * Email

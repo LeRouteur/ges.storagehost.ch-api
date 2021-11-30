@@ -18,6 +18,7 @@ require __DIR__ . "/../routes/students/register/studentsRegister.php";
 require __DIR__ . "/../routes/students/display/studentsDisplay.php";
 require __DIR__ . "/../routes/students/modify/studentsModify.php";
 require __DIR__ . "/../routes/students/delete/studentsDelete.php";
+require __DIR__ . "/../routes/students/send/studentsSend.php";
 
 /**
  * Invoices
@@ -44,6 +45,7 @@ use Invoices\invoicesDelete;
 use Invoices\invoicesDisplay;
 use Invoices\invoicesModify;
 use Invoices\invoicesSend;
+use Invoices\studentsSend;
 use Prices\pricesDisplay;
 use Prices\pricesModify;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -296,6 +298,7 @@ $app->delete('/api/student/{id}', function (Request $request, Response $response
     if ($auth->isAuth()) {
         if (isset($args['id'])) {
             $result = (new studentsDelete($args['id'], $this->pdo))->delete_student();
+            var_dump($result);
             if (is_array($result)) {
                 return $result;
             } elseif ($result) {
@@ -400,6 +403,39 @@ $app->post('/api/lessons', function (Request $request, Response $response) {
         return $response->withStatus(400)->withJson(array(
             'status' => 'error',
             'message' => 'missing_required_header_content_type',
+            'date' => time()
+        ));
+    }
+});
+
+// Send detail sheet by email
+$app->post('/api/lessons/send', function (Request $request, Response $response) {
+    $headers = getallheaders();
+    $auth = new Auth($this->pdo, $headers);
+    $body = $request->getParsedBody();
+
+    if ($auth->isAuth()) {
+        if (!empty($body)) {
+            $result = (new studentsSend())->send_email_with_pdf($body);
+            if (is_array($result)) {
+                return $response->withStatus(204);
+            } else {
+                return $response->withStatus(400)->withJson(array(
+                    'status' => 'error',
+                    'message' => $result,
+                    'date' => time()));
+            }
+        } else {
+            return $response->withStatus(400)->withJson(array(
+                'status' => 'error',
+                'message' => 'missing_body',
+                'date' => time()
+            ));
+        }
+    } else {
+        return $response->withStatus(401)->withJson(array(
+            'status' => 'error',
+            'message' => 'unauthorized',
             'date' => time()
         ));
     }
@@ -577,6 +613,7 @@ $app->delete('/api/invoice/{id}', function (Request $request, Response $response
     }
 });
 
+// Send invoice by email
 $app->post('/api/invoice/send', function (Request $request, Response $response) {
     $headers = getallheaders();
     $auth = new Auth($this->pdo, $headers);
