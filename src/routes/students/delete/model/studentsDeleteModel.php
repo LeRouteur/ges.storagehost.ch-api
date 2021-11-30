@@ -20,13 +20,23 @@ class studentsDeleteModel
     {
         if ($this->check_if_student_exist_by_id($id)) {
             try {
-                $req = $this->pdo->prepare('DELETE FROM ges_storagehost_ch.exam_dates WHERE student_id = :id');
+                $req = $this->pdo->prepare('DELETE FROM ges_storagehost_ch.invoices WHERE student_id = :id');
                 $req->execute(array(
                     ':id' => $id
                 ));
 
-                $req1 = $this->pdo->prepare('DELETE FROM ges_storagehost_ch.students WHERE id = :id');
+                $req1 = $this->pdo->prepare('DELETE FROM ges_storagehost_ch.lesson_details WHERE student_id = :id');
                 $req1->execute(array(
+                    ':id' => $id
+                ));
+
+                $req2 = $this->pdo->prepare('DELETE FROM ges_storagehost_ch.exam_dates WHERE student_id = :id');
+                $req2->execute(array(
+                    ':id' => $id
+                ));
+
+                $req3 = $this->pdo->prepare('DELETE FROM ges_storagehost_ch.students WHERE id = :id');
+                $req3->execute(array(
                     ':id' => $id
                 ));
 
