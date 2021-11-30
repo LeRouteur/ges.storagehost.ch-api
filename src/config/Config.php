@@ -3,7 +3,8 @@
 /*
  * Global settings
  */
-define("SITE_URL", "http://dev.ges.ui.ch/");
+//define("SITE_URL", "http://dev.ges.ui.ch/");
+define("SITE_URL", "https://ges.storagehost.ch/");
 
 /*
  * Email
