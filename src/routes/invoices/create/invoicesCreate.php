@@ -93,6 +93,7 @@ class invoicesCreate
             case 4:
                 return $this->calculate_theorical_lesson();
         }
+        return null;
     }
 
     private function calculate_casco()
@@ -102,7 +103,7 @@ class invoicesCreate
 
     private function calculate_lesson()
     {
-        return (int)$this->data['lesson'] * (int)$this->db_price['lesson'];
+        return (float)$this->data['lesson'] * (float)$this->db_price['lesson'];
     }
 
     private function calculate_exam()
@@ -130,12 +131,12 @@ class invoicesCreate
         $total = 0;
         for ($i = 0; $i < count($this->valid_data); $i++) {
             if ($i == 5) break;
-            $total += (int)$this->valid_data[$i];
+            $total += (float)$this->valid_data[$i];
         }
 
         // add custom field if set
         if (isset($this->valid_data['custom'])) {
-            $total += (int)$this->valid_data['custom'];
+            $total += (float)$this->valid_data['custom'];
         }
 
         return $total;

@@ -18,6 +18,7 @@ class invoicesModifyModel
 
     public function modify_invoice_by_id(array $data): array
     {
+        if (str_contains($data['total'], ",")) $data['total'] = str_replace(",", ".", $data['total']);
         try {
             $req = $this->pdo->prepare('UPDATE ges_storagehost_ch.invoices SET paid = :paid, paid_by = :paid_by, total = :total WHERE invoice_id = :id');
             $req->execute(array(

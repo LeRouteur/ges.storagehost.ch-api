@@ -125,13 +125,15 @@ class studentsModifyModel
     {
         try {
             foreach ($this->data as $datum) {
-                $req = $this->pdo->prepare('UPDATE lesson_details SET date = :date, duration = :duration, student_comment = :student_comment, teacher_comment = :teacher_comment WHERE lesson_id = :lesson_id');
+                $req = $this->pdo->prepare('UPDATE lesson_details SET date = :date, duration = :duration, student_comment = :student_comment, teacher_comment = :teacher_comment, ges_storagehost_ch.lesson_details.paid = :paid, paid_by = :paid_by WHERE lesson_id = :lesson_id');
                 $req->execute(array(
                     ':date' => $datum['date'],
                     ':duration' => $datum['lesson_duration'],
                     ':student_comment' => $datum['student_comment'],
                     ':teacher_comment' => $datum['teacher_comment'],
-                    ':lesson_id' => $datum['lesson_id']
+                    ':lesson_id' => $datum['lesson_id'],
+                    ':paid' => $datum['paid'],
+                    ':paid_by' => $datum['paid_by']
                 ));
             }
             return array(
@@ -160,13 +162,14 @@ class studentsModifyModel
             $data = array();
 
             foreach ($this->data as $datum) {
-                $req = $this->pdo->prepare('INSERT INTO ges_storagehost_ch.lesson_details(student_id, date, duration, student_comment, teacher_comment) VALUES (:student_id, :date, :duration, :student_comment, :teacher_comment)');
+                $req = $this->pdo->prepare('INSERT INTO ges_storagehost_ch.lesson_details(student_id, date, duration, student_comment, teacher_comment, ges_storagehost_ch.lesson_details.paid) VALUES (:student_id, :date, :duration, :student_comment, :teacher_comment, :paid)');
                 $req->execute(array(
                     ':date' => $datum['date'],
                     ':duration' => $datum['lesson_duration'],
                     ':student_comment' => $datum['student_comment'],
                     ':teacher_comment' => $datum['teacher_comment'],
-                    ':student_id' => $student_id
+                    ':student_id' => $student_id,
+                    ':paid' => 0
                 ));
 
                 $array = array(
