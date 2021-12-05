@@ -77,6 +77,15 @@ $container['pdo'] = function () {
     return (new SQLConnection())->connect();
 };
 
+// Capitalize each header key
+function capitalize_array_key(array $headers) {
+    foreach ($headers as $key => $val) {
+        $headers[ucfirst($key)] = $val;
+    }
+
+    return $headers;
+}
+
 /**
  * ---------------------------------------------------------------------------------------------------------------------
  * AUTHENTICATED ACTIONS

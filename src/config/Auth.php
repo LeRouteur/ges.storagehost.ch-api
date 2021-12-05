@@ -23,7 +23,7 @@ class Auth extends JWTHandler
 
     public function isAuth(): ?array
     {
-        if (array_key_exists('Authorization', $this->headers) && !empty(trim($this->headers['Authorization']))) {
+        if (array_key_exists('Authorization', $this->headers) && !empty(trim($this->headers['Authorization'])) || array_key_exists('authorization', $this->headers) && !empty(trim($this->headers['authorization']))) {
             $this->token = explode(" ", trim($this->headers['Authorization']));
             if (isset($this->token[1]) && !empty(trim($this->token[1]))) {
                 $token = $this->_jwt_decode_data($this->token[1]);
